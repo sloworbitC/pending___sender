@@ -82,6 +82,12 @@ fileInput.addEventListener('change', () => {
 
 // When files are selected (can happen multiple times)
 async function handleNewFiles(files) {
+
+    if (newFiles.some(f => f.size > 4 * 1024 * 1024)) {
+    alert('File too large — Vercel limit is ~4 MB per file. Try smaller files.');
+    return;
+}
+    
     const newFiles = Array.from(files);
     if (newFiles.length === 0) return;
 
