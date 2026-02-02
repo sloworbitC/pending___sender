@@ -13,7 +13,7 @@
   "routes": [
     {
       "src": "/api/scan",
-      "dest": "api/scan.js"
+      "dest": "/api/scan.js"
     },
     {
       "src": "/.*",
