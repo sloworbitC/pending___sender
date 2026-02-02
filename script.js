@@ -125,6 +125,7 @@ async function handleNewFiles(files) {
         console.error("Upload error:", err);
         if (previewBgLayer) previewBgLayer.textContent = `Error: ${err.message}`;
     }
+    console.log(JSON.stringify(res.content));
 
     updateAttachmentList();
     displayResult(scanResults.length - 1);
