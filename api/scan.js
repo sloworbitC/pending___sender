@@ -2,9 +2,6 @@
 import formidable from 'formidable';
 import fs from 'fs/promises';
 import pdf from 'pdf-parse';
-import mammoth from 'mammoth';
-import XLSX from 'xlsx';
-import { parse } from 'csv-parse/sync';
 
 export const config = {
   api: {
@@ -13,54 +10,52 @@ export const config = {
 };
 
 export default async function handler(req, res) {
+  console.log('Function invoked - method:', req.method);
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const form = formidable({ multiples: true });
-
   try {
+    console.log('Parsing form...');
+    const form = formidable({ multiples: true });
     const [fields, files] = await form.parse(req);
+
+    console.log('Files received:', files);
+
     const fileArray = Array.isArray(files.files) ? files.files : [files.files].filter(Boolean);
 
     if (!fileArray.length) {
       return res.status(400).json({ error: 'No files uploaded' });
     }
 
+    console.log('Processing', fileArray.length, 'files');
+
     const results = await Promise.all(
       fileArray.map(async (file) => {
         try {
+          console.log('Reading file:', file.originalFilename);
           const buffer = await fs.readFile(file.filepath);
+
           let content = '';
-
           const ext = file.originalFilename.split('.').pop().toLowerCase();
-          const mime = file.mimetype;
 
-          if (mime === 'application/pdf' || ext === 'pdf') {
+          if (ext === 'pdf') {
+            console.log('Parsing PDF...');
             const data = await pdf(buffer);
             content = data.text || '';
-          } else if (mime === 'text/plain' || ext === 'txt') {
+          } else if (ext === 'txt') {
+            console.log('Parsing TXT...');
             content = buffer.toString('utf-8');
-          } else if (ext === 'docx') {
-            const { value } = await mammoth.extractRawText({ buffer });
-            content = value;
-          } else if (ext === 'xlsx' || ext === 'xls') {
-            const workbook = XLSX.read(buffer, { type: 'buffer' });
-            content = '';
-            workbook.SheetNames.forEach(sheet => {
-              const sheetContent = XLSX.utils.sheet_to_txt(workbook.Sheets[sheet]);
-              content += `Sheet ${sheet}:\n${sheetContent}\n\n`;
-            });
-          } else if (ext === 'csv') {
-            content = parse(buffer, { columns: false, skip_empty_lines: true })
-              .map(row => row.join(', '))
-              .join('\n');
           } else {
+            console.log('Unsupported file type:', ext);
             content = 'Unsupported file type';
           }
 
+          console.log('Cleaning up temp file...');
           await fs.unlink(file.filepath).catch(() => {});
 
+          console.log('Scanning content...');
           const sensitive_terms = scanKeywords(content);
           const sensitive_patterns = scanPatterns(content);
 
@@ -70,7 +65,7 @@ export default async function handler(req, res) {
             sensitive_patterns
           };
         } catch (fileErr) {
-          console.error(`File error for ${file.originalFilename}:`, fileErr);
+          console.error('File processing error:', fileErr.message, fileErr.stack);
           return {
             content: 'Error processing file: ' + fileErr.message,
             sensitive_terms: [],
@@ -80,9 +75,10 @@ export default async function handler(req, res) {
       })
     );
 
+    console.log('Sending results...');
     res.status(200).json(results);
   } catch (err) {
-    console.error('Scan handler error:', err);
+    console.error('Handler error:', err.message, err.stack);
     res.status(500).json({ error: 'Scan failed: ' + err.message });
   }
 }
