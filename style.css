@@ -207,7 +207,7 @@ main {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 } 
 
-/* Background preview layer – large faint text behind everything */
+/* Background preview layer */
 .preview-bg-layer {
     position: absolute;
     inset: 0;
@@ -215,12 +215,13 @@ main {
     z-index: -2;
     pointer-events: none;
     color: rgba(26, 59, 80, 0.568);
-    /* very faint – adjust 0.06–0.12 */
     font-family: 'Courier New', monospace;
     font-size: 1.5rem;
     line-height: 1.35;
     white-space: pre-wrap;
-    word-break: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
     padding: 80px 60px;
     user-select: none;
     filter: blur(1.5px);
