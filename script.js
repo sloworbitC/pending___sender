@@ -246,7 +246,8 @@ previewBgLayer.innerHTML = normalized;
         container.appendChild(tag);
     });
 
-    console.log('Raw content (escaped):', JSON.stringify(result.content.substring(0, 300)));
+   console.log(JSON.stringify(result.content));
+
 }
 
 
