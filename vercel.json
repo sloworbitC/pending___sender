@@ -8,10 +8,6 @@
     {
       "src": "*.{html,css,js}",
       "use": "@vercel/static"
-    },
-    {
-      "src": "!(api/**)",
-      "use": "@vercel/static"
     }
   ],
   "routes": [
@@ -20,7 +16,7 @@
       "dest": "/api/scan.js"
     },
     {
-      "src": "/(script.js|style.css|index.html)",
+      "src": "/(index.html|style.css|script.js)",
       "dest": "/$1"
     },
     {
