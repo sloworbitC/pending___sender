@@ -163,7 +163,7 @@ function displayResult(index) {
     const result = scanResults[index];
     if (!result) return;
 
-    previewBgLayer.innerHTML = (result.content || '').replace(/\n/g, "<br>");
+    previewBgLayer.innerHTML = `<pre>${result.content || ''}</pre>`;
     currentPreviewIndex = index;
     updateActiveRow();
 
