@@ -168,10 +168,13 @@ function displayResult(index) {
     const result = scanResults[index];
     if (!result) return;
     
-const normalized = (result.content || '')
-    .replace(/\r\n|\r|\n/g, '<br>')     // all line endings → <br>
-    .replace(/  +/g, ' &nbsp;');        // multiple spaces → non-breaking spaces
+const raw = result.content || '';
 
+let normalized = raw
+  .replace(/\r\n|\r|\n/g, '<br>')               // \r\n (Windows), \r (old Mac), \n (Unix)
+  .replace(/\u2028|\u2029/g, '<br>');           // Unicode line/paragraph separators
+normalized = normalized.replace(/  +/g, match => '&nbsp;'.repeat(match.length));
+normalized = normalized.replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;');
 previewBgLayer.innerHTML = normalized;
     
     currentPreviewIndex = index;
