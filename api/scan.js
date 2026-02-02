@@ -1,4 +1,3 @@
-// api/scan.js
 import formidable from 'formidable';
 import fs from 'fs/promises';
 import pdf from 'pdf-parse';
@@ -10,22 +9,23 @@ export const config = {
 };
 
 export default async function handler(req, res) {
-  console.log('Function invoked - method:', req.method);
+  console.log('Function started - method:', req.method);
 
   if (req.method !== 'POST') {
+    console.log('Method not POST');
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    console.log('Parsing form...');
+    console.log('Starting formidable parse');
     const form = formidable({ multiples: true });
     const [fields, files] = await form.parse(req);
-
-    console.log('Files received:', files);
+    console.log('Parse complete - files:', Object.keys(files));
 
     const fileArray = Array.isArray(files.files) ? files.files : [files.files].filter(Boolean);
 
     if (!fileArray.length) {
+      console.log('No files');
       return res.status(400).json({ error: 'No files uploaded' });
     }
 
@@ -33,29 +33,30 @@ export default async function handler(req, res) {
 
     const results = await Promise.all(
       fileArray.map(async (file) => {
+        console.log('Processing file:', file.originalFilename, 'mimetype:', file.mimetype);
+
         try {
-          console.log('Reading file:', file.originalFilename);
           const buffer = await fs.readFile(file.filepath);
+          console.log('File read - buffer length:', buffer.length);
 
           let content = '';
-          const ext = file.originalFilename.split('.').pop().toLowerCase();
 
-          if (ext === 'pdf') {
-            console.log('Parsing PDF...');
+          if (file.mimetype === 'application/pdf') {
+            console.log('Parsing PDF');
             const data = await pdf(buffer);
             content = data.text || '';
-          } else if (ext === 'txt') {
-            console.log('Parsing TXT...');
+          } else if (file.mimetype === 'text/plain') {
+            console.log('Parsing TXT');
             content = buffer.toString('utf-8');
           } else {
-            console.log('Unsupported file type:', ext);
+            console.log('Unsupported mimetype');
             content = 'Unsupported file type';
           }
 
-          console.log('Cleaning up temp file...');
+          console.log('Deleting temp file');
           await fs.unlink(file.filepath).catch(() => {});
 
-          console.log('Scanning content...');
+          console.log('Scanning');
           const sensitive_terms = scanKeywords(content);
           const sensitive_patterns = scanPatterns(content);
 
@@ -65,7 +66,7 @@ export default async function handler(req, res) {
             sensitive_patterns
           };
         } catch (fileErr) {
-          console.error('File processing error:', fileErr.message, fileErr.stack);
+          console.error('File error:', fileErr.message, fileErr.stack);
           return {
             content: 'Error processing file: ' + fileErr.message,
             sensitive_terms: [],
@@ -75,16 +76,16 @@ export default async function handler(req, res) {
       })
     );
 
-    console.log('Sending results...');
+    console.log('Sending results');
     res.status(200).json(results);
   } catch (err) {
-    console.error('Handler error:', err.message, err.stack);
+    console.error('Handler crash:', err.message, err.stack);
     res.status(500).json({ error: 'Scan failed: ' + err.message });
   }
 }
 
 function scanKeywords(content) {
-  const keywords = ['password', 'secret', 'confidential', 'private', 'ssn', 'credit card', 'sensitive'];
+  const keywords = ['password', 'secret', 'confidential', 'private', 'ssn', 'credit card'];
   return keywords.filter(kw => content.toLowerCase().includes(kw));
 }
 
