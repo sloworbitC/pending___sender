@@ -3,20 +3,17 @@ Pending… Sender is a frontend prototype that simulates an email compose experi
 
 Rather than relying solely on conventional alert boxes, detected information is surfaced through subtle visual signals and background previews, allowing risk to be felt rather than aggressively warned.
 
-# Tech Notes
 
-Frontend-focused prototype
-
-Serverless scanning via Vercel
-
-Regex-based detection (PDF / TXT)
-
-Designed for interpretability, not accuracy claims
-
-
-# Status
-Concept prototype / design experiment
 
 # Live Demo
 https://pending-sender.vercel.app/
 
+Drop an attachment with sensitive information into the compose interface to trigger visual warning signals.
+
+# Tech Notes
+
+Frontend-focused prototype<br>Serverless scanning via Vercel<br>Regex-based detection (PDF / TXT)<br>designed for interpretability, not accuracy claims
+
+
+# Status
+Concept prototype / design experiment
