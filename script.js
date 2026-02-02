@@ -168,7 +168,7 @@ function displayResult(index) {
     const result = scanResults[index];
     if (!result) return;
 
-    previewBgLayer.innerHTML = `<pre>${(result.content || '').replace(/\r\n|\r|\n/g, '<br>')}</pre>`;
+    previewBgLayer.innerHTML = (result.content || '').replace(/\r\n|\r|\n/g, '<br>');
     currentPreviewIndex = index;
     updateActiveRow();
 
