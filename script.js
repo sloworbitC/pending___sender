@@ -125,7 +125,7 @@ async function handleNewFiles(files) {
         console.error("Upload error:", err);
         if (previewBgLayer) previewBgLayer.textContent = `Error: ${err.message}`;
     }
-    console.log(JSON.stringify(res.content));
+ 
 
     updateAttachmentList();
     displayResult(scanResults.length - 1);
@@ -172,8 +172,21 @@ function displayResult(index) {
 const raw = result.content || '';
 
 let normalized = raw
-  .replace(/\r\n|\r|\n/g, '<br>')               // \r\n (Windows), \r (old Mac), \n (Unix)
-  .replace(/\u2028|\u2029/g, '<br>');           // Unicode line/paragraph separators
+    // Windows, Mac, Unix
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    // Unicode line separators
+    .replace(/\u2028|\u2029/g, '\n')
+    // DOCX soft breaks
+    .replace(/<w:br\s*\/?>/gi, '\n')
+    .replace(/<w:p\s*\/?>/gi, '\n')
+    // Vertical tab, form feed, next-line control
+    .replace(/[\u000b\u000c\u0085]/g, '\n')
+    // Multiple newlines → preserve paragraphs
+    .replace(/\n{2,}/g, '\n\n')
+    // Finally convert to <br>
+    .replace(/\n/g, '<br>');
+         // Unicode line/paragraph separators
 normalized = normalized.replace(/  +/g, match => '&nbsp;'.repeat(match.length));
 normalized = normalized.replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;');
 previewBgLayer.innerHTML = normalized;
