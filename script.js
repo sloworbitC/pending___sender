@@ -161,7 +161,7 @@ function displayResult(index) {
     const result = scanResults[index];
     if (!result) return;
 
-    previewBgLayer.textContent = result.content || '';
+    previewBgLayer.innerHTML = (result.content || '').replace(/\n/g, "<br>");
     currentPreviewIndex = index;
     updateActiveRow();
 
@@ -342,44 +342,6 @@ subjectInput.addEventListener('input', () => {
     }
 });
 
-
-// --- Fetch Emails ---
-/* async function loadEmails(folder) {
-    showSection(folder);
-    document.getElementById('folder-title').textContent = folder.charAt(0).toUpperCase() + folder.slice(1);
-    const container = document.getElementById('email-container');
-    container.innerHTML = "Loading...";
-
-    try {
-        const response = await fetch(`/fetch_emails?folder=${folder}`);
-        const emails = await response.json();
-
-        container.innerHTML = ""; // Clear loading
-        if (emails.error) {
-            container.innerHTML = `<p style="color:red">Error: ${emails.error}</p>`;
-            return;
-        }
-
-        if (emails.length === 0) {
-            container.innerHTML = "<p>No emails found.</p>";
-            return;
-        }
-
-        emails.forEach(email => {
-            const card = document.createElement('div');
-            card.className = 'email-card';
-            card.innerHTML = `
-                <h4>${email.subject || '(No Subject)'}</h4>
-                <small>From: ${email.sender}</small>
-                <p>${email.body}</p>
-            `;
-            container.appendChild(card);
-        });
-    } catch (error) {
-        container.innerHTML = "<p>Failed to load emails.</p>";
-    }
-} */
-
 async function loadEmails(folder) {
     showSection(folder);
     document.getElementById('folder-title').textContent = folder.charAt(0).toUpperCase() + folder.slice(1);
@@ -471,11 +433,11 @@ window.removeFile = function (idx) {
     if (scanResults.length > 0) {
         displayResult(0);
     } else {
-        previewBgLayer.textContent = '';
-        clearPreview();
+        BgLayer.textContent = '';
+        clear();
     }
 
-    updateClearPreviewButton();
+    updateClearButton();
     updateActiveRow();
 };
 
@@ -483,16 +445,16 @@ window.removeFile = function (idx) {
 
 
 
-function updateClearPreviewButton() {
-    const clearBtn = document.getElementById('clear-preview-btn');
+function updateClearButton() {
+    const clearBtn = document.getElementById('clear--btn');
     if (clearBtn) {
         clearBtn.classList.toggle('visible', attachedFiles.length > 0);
         clearBtn.classList.toggle('hidden', attachedFiles.length === 0);
     }
 }
 
-function clearPreview() {
-    if (previewBgLayer) {
+function clear() {
+    if (BgLayer) {
         previewBgLayer.textContent = '';
     }
 
