@@ -421,7 +421,7 @@ function updateAttachmentList() {
         clearBtn.classList.toggle('visible', attachedFiles.length > 0);
     }
 
-    updateClearPreviewButton();
+    updateClearButton();
     updateActiveRow();
 }
 
