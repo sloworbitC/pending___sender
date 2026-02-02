@@ -6,6 +6,10 @@
       "use": "@vercel/node"
     },
     {
+      "src": "*.{html,css,js}",
+      "use": "@vercel/static"
+    },
+    {
       "src": "!(api/**)",
       "use": "@vercel/static"
     }
@@ -16,12 +20,12 @@
       "dest": "/api/scan.js"
     },
     {
-      "src": "/.*",
-      "dest": "/index.html"
+      "src": "/(script.js|style.css|index.html)",
+      "dest": "/$1"
     },
     {
-      "src": "/(style.css|script.js)",
-      "dest": "/$1"
+      "src": "/.*",
+      "dest": "/index.html"
     }
   ]
 }
