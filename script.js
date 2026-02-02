@@ -169,12 +169,11 @@ function displayResult(index) {
     if (!result) return;
     
 const normalized = (result.content || '')
-    .replace(/\r\n/g, '\n')      // Windows → Unix
-    .replace(/\r/g, '\n')        // Old Mac → Unix
-    .replace(/\u2028|\u2029/g, '\n') // Unicode line separators
-    .replace(/\n/g, '<br>');
+    .replace(/\r\n|\r|\n/g, '<br>')     // all line endings → <br>
+    .replace(/  +/g, ' &nbsp;');        // multiple spaces → non-breaking spaces
 
-    previewBgLayer.innerHTML = normalized;
+previewBgLayer.innerHTML = normalized;
+    
     currentPreviewIndex = index;
     updateActiveRow();
 
@@ -447,7 +446,7 @@ window.removeFile = function (idx) {
         displayResult(0);
     } else {
         previewBgLayer.textContent = '';
-        clear();
+        clearPreview();
     }
 
     updateClearButton();
@@ -459,16 +458,16 @@ window.removeFile = function (idx) {
 
 
 function updateClearButton() {
-    const clearBtn = document.getElementById('clear--btn');
+    const clearBtn = document.getElementById('clear-preview-btn');
     if (clearBtn) {
         clearBtn.classList.toggle('visible', attachedFiles.length > 0);
         clearBtn.classList.toggle('hidden', attachedFiles.length === 0);
     }
 }
 
-function clear() {
+function clearPreview() {
     if (previewBgLayer) {
-        previewBgLayer.textContent = '';
+        previewBgLayer.innerHTML = '';
     }
 
     // Clear warning panel & tags
