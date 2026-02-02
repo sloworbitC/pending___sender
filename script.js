@@ -167,8 +167,14 @@ function displayResult(index) {
 
     const result = scanResults[index];
     if (!result) return;
+    
+const normalized = (result.content || '')
+    .replace(/\r\n/g, '\n')      // Windows → Unix
+    .replace(/\r/g, '\n')        // Old Mac → Unix
+    .replace(/\u2028|\u2029/g, '\n') // Unicode line separators
+    .replace(/\n/g, '<br>');
 
-    previewBgLayer.innerHTML = (result.content || '').replace(/\r\n|\r|\n/g, '<br>');
+    previewBgLayer.innerHTML = normalized;
     currentPreviewIndex = index;
     updateActiveRow();
 
