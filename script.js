@@ -105,28 +105,31 @@ async function handleNewFiles(files) {
     const formData = new FormData();
     newFiles.forEach(f => formData.append('files', f));
 
-    try {
+   try {
+        console.log('Sending fetch to /api/scan');
         const res = await fetch('/api/scan', { method: 'POST', body: formData });
-        if (!res.ok) throw new Error('Scan failed');
+        console.log('Fetch response status:', res.status);
+
+        if (!res.ok) throw new Error('Scan failed: ' + res.status);
 
         const newResults = await res.json();
+        console.log('Received results:', newResults);
+
         scanResults.push(...newResults);
+        console.log('scanResults after push:', scanResults.length);
 
-        updateAttachmentList();           // This should now show the list
+        updateAttachmentList();
         if (scanResults.length > 0) {
+            console.log('Calling displayResult with index:', scanResults.length - 1);
             displayResult(scanResults.length - 1);
+        } else {
+            console.log('No results - skipping displayResult');
         }
-
-        if (previewBgLayer) {
-            previewBgLayer.textContent = scanResults[scanResults.length - 1]?.content || '';
-        }
-
+        // ... rest
     } catch (err) {
         console.error("Upload error:", err);
-        if (previewBgLayer) previewBgLayer.textContent = `Error: ${err.message}`;
+        // ... rest
     }
- 
-
     updateAttachmentList();
     displayResult(scanResults.length - 1);
 }
@@ -159,7 +162,10 @@ function updateDropdownAndBadge() {
 let currentPreviewIndex = -1;
 
 function displayResult(index) {
+console.log('displayResult called with index:', index);
+
     if (index < 0 || !previewBgLayer) {
+        console.log('Early return - invalid index or no previewBgLayer');
         if (previewBgLayer) previewBgLayer.textContent = '';
         currentPreviewIndex = -1;
         updateActiveRow();
@@ -167,30 +173,23 @@ function displayResult(index) {
     }
 
     const result = scanResults[index];
-    if (!result) return;
-    
-const raw = result.content || '';
+    console.log('result object:', result);
 
-let normalized = raw
-    // Windows, Mac, Unix
-    .replace(/\r\n/g, '\n')
-    .replace(/\r/g, '\n')
-    // Unicode line separators
-    .replace(/\u2028|\u2029/g, '\n')
-    // DOCX soft breaks
-    .replace(/<w:br\s*\/?>/gi, '\n')
-    .replace(/<w:p\s*\/?>/gi, '\n')
-    // Vertical tab, form feed, next-line control
-    .replace(/[\u000b\u000c\u0085]/g, '\n')
-    // Multiple newlines → preserve paragraphs
-    .replace(/\n{2,}/g, '\n\n')
-    // Finally convert to <br>
-    .replace(/\n/g, '<br>');
-         // Unicode line/paragraph separators
-normalized = normalized.replace(/  +/g, match => '&nbsp;'.repeat(match.length));
-normalized = normalized.replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;');
-previewBgLayer.innerHTML = normalized;
-    
+    if (!result) {
+        console.log('No result for index - returning');
+        return;
+    }
+
+    console.log('Raw content length:', result.content?.length || 0);
+    console.log('Has newline?', result.content?.includes('\n'));
+    console.log('Raw content sample:', JSON.stringify(result.content?.substring(0, 300) || ''));
+
+    // Your normalization
+    const normalized = (result.content || '')
+        .replace(/\r\n|\r|\n/g, '<br>')
+        .replace(/  +/g, ' &nbsp;');
+
+    previewBgLayer.innerHTML = normalized;
     currentPreviewIndex = index;
     updateActiveRow();
 
