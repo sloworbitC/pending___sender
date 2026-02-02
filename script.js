@@ -82,13 +82,14 @@ fileInput.addEventListener('change', () => {
 
 // When files are selected (can happen multiple times)
 async function handleNewFiles(files) {
-    if (newFiles.some(f => f.size > 4 * 1024 * 1024)) {
+
+    const newFiles = Array.from(files);
+        if (newFiles.some(f => f.size > 4 * 1024 * 1024)) {
     if (previewBgLayer) {
         previewBgLayer.innerHTML = '<span style="color:black; font-weight:bold;">FILE TOO LARGE — Vercel limit ~4 MB per file. Try smaller.</span>';
     }
     return;
 }
-    const newFiles = Array.from(files);
     if (newFiles.length === 0) return;
 
     attachedFiles.push(...newFiles);
