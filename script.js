@@ -433,7 +433,7 @@ window.removeFile = function (idx) {
     if (scanResults.length > 0) {
         displayResult(0);
     } else {
-        BgLayer.textContent = '';
+        previewBgLayer.textContent = '';
         clear();
     }
 
