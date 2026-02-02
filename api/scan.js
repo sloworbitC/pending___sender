@@ -79,7 +79,7 @@ export default async function handler(req, res) {
           await fs.unlink(file.filepath).catch(() => {});
 
           // Clean content for better regex detection
-          const cleanContent = content.replace(/\s\s+/g, " ");
+          const cleanContent = content;
 
           // Sensitive term scanning
           const foundTerms = sensitiveTerms.filter((term) =>
