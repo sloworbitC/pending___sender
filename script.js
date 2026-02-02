@@ -86,7 +86,7 @@ async function handleNewFiles(files) {
     const newFiles = Array.from(files);
         if (newFiles.some(f => f.size > 4 * 1024 * 1024)) {
     if (previewBgLayer) {
-        previewBgLayer.innerHTML = '<span style="color:black; font-weight:bold;">FILE TOO LARGE — Vercel limit ~4 MB per file. Try smaller.</span>';
+        previewBgLayer.innerHTML = '<span style="color:black; font-weight:bold; font size: 3rem">FILE TOO LARGE <br>— Vercel limit ~4 MB per file.<br> Try smaller.</span>';
     }
     return;
 }
