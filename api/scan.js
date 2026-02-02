@@ -1,98 +1,119 @@
-// api/scan.js
-import formidable from 'formidable';
-import fs from 'fs/promises';
-import pdf from 'pdf-parse';
-import mammoth from 'mammoth';
+import formidable from "formidable";
+import fs from "fs/promises";
+import path from "path";
+import pdf from "pdf-parse";
+import mammoth from "mammoth";
+import xlsx from "xlsx";
 
 export const config = {
-  api: {
-    bodyParser: false
-  }
+  api: { bodyParser: false }
+};
+
+// Sensitive terms
+const sensitiveTerms = [
+  "name", "address", "id", "phone", "email",
+  "birth", "credit card", "password", "confidential"
+];
+
+// Regex patterns
+const patterns = {
+  "Phone Number": /(\+?\d{1,3}[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/gi,
+  "Email": /[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+/gi,
+  "Credit Card": /\b(?:\d{4}[ -]?){3}\d{4}\b/g,
 };
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const form = formidable({ multiples: true });
-
   try {
+    const form = formidable({ multiples: true });
     const [fields, files] = await form.parse(req);
-    const fileArray = Array.isArray(files.files) ? files.files : [files.files].filter(Boolean);
+
+    const fileArray = Array.isArray(files.files)
+      ? files.files
+      : [files.files].filter(Boolean);
 
     if (!fileArray.length) {
-      return res.status(400).json({ error: 'No files uploaded' });
+      return res.status(400).json({ error: "No files uploaded" });
     }
 
     const results = await Promise.all(
       fileArray.map(async (file) => {
         try {
           const buffer = await fs.readFile(file.filepath);
-          let content = '';
-          const ext = file.originalFilename.split('.').pop().toLowerCase();
+          const ext = path.extname(file.originalFilename).toLowerCase();
 
-          if (ext === 'pdf') {
+          let content = "";
+
+          // PDF
+          if (ext === ".pdf") {
             const data = await pdf(buffer);
-            content = data.text || '';
-            // Add \n between paragraphs if missing
-            content = content.replace(/([.!?])\s\s+/g, '$1\n\n');
-          } else if (ext === 'txt') {
-            content = buffer.toString('utf-8');
-            // Normalize to \n, preserve multiple lines/spaces
-            content = content.replace(/\r\n|\r/g, '\n');
-          } else if (ext === 'docx') {
-            const result = await mammoth.convertToHtml({ buffer });
-            content = result.value;  // HTML with <p> and <br>
-            // Convert HTML to plain text with \n
-            content = content
-              .replace(/<p>/g, '')  // Remove <p>
-              .replace(/<\/p>/g, '\n\n')  // End of paragraph → double \n
-              .replace(/<br\s*\/?>/g, '\n')  // <br> → \n
-              .replace(/<[^>]+>/g, '');  // Strip remaining tags
-            content = content.trim();  // Remove leading/trailing whitespace
-          } else {
-            content = 'Unsupported file type';
+            content = data.text || "";
           }
 
+          // DOCX
+          else if (ext === ".docx") {
+            const { value } = await mammoth.extractRawText({ buffer });
+            content = value;
+          }
+
+          // TXT / CSV
+          else if (ext === ".txt" || ext === ".csv") {
+            content = buffer.toString("utf-8");
+          }
+
+          // XLS / XLSX
+          else if (ext === ".xls" || ext === ".xlsx") {
+            const workbook = xlsx.read(buffer, { type: "buffer" });
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            content = xlsx.utils.sheet_to_txt(sheet);
+          }
+
+          else {
+            content = "[Unsupported file type]";
+          }
+
+          // Cleanup temp file
           await fs.unlink(file.filepath).catch(() => {});
 
-          const sensitive_terms = scanKeywords(content);
-          const sensitive_patterns = scanPatterns(content);
+          // Clean content for better regex detection
+          const cleanContent = content.replace(/\s\s+/g, " ");
+
+          // Sensitive term scanning
+          const foundTerms = sensitiveTerms.filter((term) =>
+            cleanContent.toLowerCase().includes(term.toLowerCase())
+          );
+
+          // Regex scanning
+          const foundPatterns = {};
+          for (const [name, regex] of Object.entries(patterns)) {
+            const matches = cleanContent.match(regex);
+            if (matches) {
+              foundPatterns[name] = [...new Set(matches)];
+            }
+          }
 
           return {
-            content,
-            sensitive_terms,
-            sensitive_patterns
+            filename: file.originalFilename,
+            content: cleanContent.substring(0, 8000),
+            sensitive_terms: foundTerms,
+            sensitive_patterns: foundPatterns,
           };
-        } catch (fileErr) {
-          console.error('File error:', fileErr.message);
+        } catch (err) {
           return {
-            content: 'Error processing file: ' + fileErr.message,
+            filename: file.originalFilename,
+            content: "Error processing file: " + err.message,
             sensitive_terms: [],
-            sensitive_patterns: {}
+            sensitive_patterns: {},
           };
         }
       })
     );
 
-    res.status(200).json(results);
+    return res.status(200).json(results);
   } catch (err) {
-    console.error('Scan handler error:', err.message);
-    res.status(500).json({ error: 'Scan failed: ' + err.message });
+    return res.status(500).json({ error: "Scan failed: " + err.message });
   }
-}
-
-function scanKeywords(content) {
-  const keywords = ['password', 'secret', 'confidential', 'private', 'ssn', 'credit card', 'sensitive'];
-  return keywords.filter(kw => content.toLowerCase().includes(kw));
-}
-
-function scanPatterns(content) {
-  return {
-    email: content.match(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g) || [],
-    phone: content.match(/\b\+?\d{1,3}?[-. (]?\d{3}[-. )]?\d{3}[-. ]?\d{4}\b/g) || [],
-    password: content.match(/(?i)password\s*[:=]\s*[\w\d@!#$%*]{8,}/g) || [],
-    id: content.match(/\b[A-Z][0-9]{9}\b/g) || []
-  };
 }
