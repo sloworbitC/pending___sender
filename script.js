@@ -454,7 +454,7 @@ function updateClearButton() {
 }
 
 function clear() {
-    if (BgLayer) {
+    if (previewBgLayer) {
         previewBgLayer.textContent = '';
     }
 
