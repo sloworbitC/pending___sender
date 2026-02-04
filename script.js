@@ -205,7 +205,7 @@ function displayResult(index) {
     const detections = new Map();
 
     if (result.sensitive_terms?.length > 0) {
-        detections.set('keywords', result.sensitive_terms.join(', '));
+        detections.set('keywords', result.sensitive_terms);
     }
 
     if (result.sensitive_patterns) {
@@ -243,8 +243,8 @@ function displayResult(index) {
         
     console.log('Raw values array for', type, ':', values);
 console.log('Joined with \\n:', values.join('\n'));
-    tag.setAttribute('data-values', Array.isArray(values) ? values.join('\n') : values || '(no details)');
-    tag.setAttribute('data-type', type.toLowerCase());
+const valuesStr = Array.isArray(values) ? values.join('\n') : values || '(no details)';
+  tag.setAttribute('data-values', valuesStr);
 
     container.appendChild(tag);
 });
