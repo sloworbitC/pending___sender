@@ -212,6 +212,7 @@ main {
     position: absolute;
     inset: 0;
     width: 100%;
+    overflow-y: auto;
     z-index: -2;
     pointer-events: none;
   color: rgba(26, 59, 80, 1); 
