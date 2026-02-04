@@ -243,8 +243,16 @@ function displayResult(index) {
 
         tag.appendChild(typeSpan);
 
-        // Add the values as data attribute (for hover display)
-        tag.setAttribute('data-values', values || '(no details)');
+        
+        // Instead of join or anything fancy
+let valuesStr = values || '(no details)';
+
+// If values is already a comma-separated string, turn commas into line breaks
+if (typeof valuesStr === 'string') {
+  valuesStr = valuesStr.replace(/,\s*/g, ',<br>');
+}
+
+tag.setAttribute('data-values', valuesStr);
         tag.setAttribute('data-type', type.toLowerCase());
 
         // Optional: add title tooltip for accessibility
