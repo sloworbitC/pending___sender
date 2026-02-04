@@ -451,7 +451,6 @@ textarea:hover {
   padding: 0.25rem;
   height:auto;
   white-space: pre;
-  word-break: normal;
 }
 
 /* Show ::after only on hover */
