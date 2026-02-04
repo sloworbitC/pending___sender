@@ -243,7 +243,7 @@ function displayResult(index) {
 
         tag.appendChild(typeSpan);
 
-       tag.setAttribute('data-values', values.map(v => v.replace(/ /g, '&nbsp;').replace(/-/g, '&#8209;')).join('\n'));
+       tag.setAttribute('data-values', values.map(v => `• ${v}`).join('<br>'));
         tag.setAttribute('data-type', type.toLowerCase());
 
         // Optional: add title tooltip for accessibility
