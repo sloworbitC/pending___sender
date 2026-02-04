@@ -27,22 +27,6 @@ const patterns = {
   "confidential": /\bconfidential\b/gi
 };
 
-// Extract and group sensitive data
-export function extractSensitiveData(text) {
-  const results = {};
-
-  for (const [label, regex] of Object.entries(patterns)) {
-    const matches = text.match(regex);
-
-    if (matches && matches.length > 0) {
-      // Clean, trim, and dedupe
-      const cleaned = [...new Set(matches.map(m => m.trim()))];
-      results[label] = cleaned;
-    }
-  }
-
-  return results;
-}
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
