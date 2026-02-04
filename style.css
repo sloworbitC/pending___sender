@@ -771,9 +771,6 @@ select#select-doc:not(.hidden) {
 }
 
  @media (max-width: 1100px) {
-    body{
-    font-size: 0.8rem;
-    }
      
     .form-field {
         position: static;
