@@ -184,7 +184,7 @@ function displayResult(index) {
     console.log('Has newline?', result.content?.includes('\n'));
     console.log('Raw content sample:', JSON.stringify(result.content?.substring(0, 300) || ''));
 
-    // Your normalization
+    // PREVIEW NORMALIZATION (unchanged)
     const normalized = (result.content || '')
         .replace(/\r\n|\r|\n/g, '<br>')
         .replace(/  +/g, ' &nbsp;');
@@ -205,15 +205,25 @@ function displayResult(index) {
     // Collect detections
     const detections = new Map();
 
+    // KEYWORDS (wrap each item)
     if (result.sensitive_terms?.length > 0) {
-        detections.set('keywords', result.sensitive_terms.join(', '));
+        const wrappedKeywords = result.sensitive_terms
+            .map(item => `<span class="no-break">${item}</span>`)
+            .join(', ');
+        detections.set('keywords', wrappedKeywords);
     }
 
+    // PATTERN MATCHES (wrap each item)
     if (result.sensitive_patterns) {
         Object.entries(result.sensitive_patterns).forEach(([key, arr]) => {
             if (Array.isArray(arr) && arr.length > 0) {
                 const cleanKey = key.toUpperCase().replace(/_/g, ' ').toLowerCase();
-                detections.set(cleanKey, arr.join(', '));
+
+                const wrappedValues = arr
+                    .map(item => `<span class="no-break">${item}</span>`)
+                    .join(', ');
+
+                detections.set(cleanKey, wrappedValues);
             }
         });
     }
@@ -226,8 +236,8 @@ function displayResult(index) {
 
     if (detections.size === 0) return;
 
-    // ─── CREATE TAGS WITH PREDEFINED POSITIONS ───
-    detections.forEach((values, type) => {
+    // CREATE TAGS
+    detections.forEach((htmlValues, type) => {
         const tag = document.createElement('div');
         tag.className = 'sensitive-type-tag';
 
@@ -236,27 +246,33 @@ function displayResult(index) {
             displayText = 'CONTAINS';
         }
 
-        // Create wrapper span for the type text
+        // Type label
         const typeSpan = document.createElement('span');
         typeSpan.className = 'tag-type';
         typeSpan.textContent = displayText;
-
         tag.appendChild(typeSpan);
 
-        // Add the values as data attribute (for hover display)
-        tag.setAttribute('data-values', values || '(no details)');
-        tag.setAttribute('data-type', type.toLowerCase());
+        // Add visible values (HTML)
+        const valuesDiv = document.createElement('div');
+        valuesDiv.className = 'tag-values';
+        valuesDiv.innerHTML = htmlValues;
+        tag.appendChild(valuesDiv);
 
-        // Optional: add title tooltip for accessibility
-        tag.setAttribute('title', values || '(no details)');
+        // Attributes must stay plain text
+        const plainText = htmlValues
+            .replace(/<[^>]+>/g, '') // strip spans
+            .trim();
+
+        tag.setAttribute('data-values', plainText);
+        tag.setAttribute('data-type', type.toLowerCase());
+        tag.setAttribute('title', plainText);
 
         container.appendChild(tag);
-
     });
 
     console.log(JSON.stringify(result.content));
-
 }
+
 
 
 function displayWarnings(terms, patterns) {
