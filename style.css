@@ -367,7 +367,7 @@ textarea:hover {
     padding: 10px;
 }
 
-.sensitive-type-tag {
+.-tag {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -391,7 +391,7 @@ textarea:hover {
 }
 
 
-.sensitive-type-tag[data-type="keywords"] {
+.-tag[data-type="keywords"] {
     font-size: 3rem;
     color: #e63946;
     font-weight: 900;
@@ -399,32 +399,32 @@ textarea:hover {
     left: 60%;
 }
 
-.sensitive-type-tag[data-type="email"] {
+.-tag[data-type="email"] {
     top: 20%;
     left: 0%;
 }
 
-.sensitive-type-tag[data-type="phone"] {
+.-tag[data-type="phone"] {
     top: 45%;
     left: 85%;
 }
 
-.sensitive-type-tag[data-type="password"] {
+.-tag[data-type="password"] {
     top: 75%;
     left: 65%;
 }
 
-.sensitive-type-tag[data-type="id"] {
+.-tag[data-type="id"] {
     top: 35%;
     left: 30%;
 }
 
-.sensitive-type-tag[data-type="credit card"] {
+.-tag[data-type="credit card"] {
     top: 60%;
     left: 15%;
 }
 
-.sensitive-type-tag:hover {
+.-tag:hover {
   content: '';
   transform: translate(-50%, -50%) rotate(0deg) scale(1.1);
   color: #111;
@@ -435,7 +435,7 @@ textarea:hover {
   text-align: left;
 }
 
-.sensitive-type-tag:hover .tag-type {
+.-tag:hover .tag-type {
   display: none;
 }
 /* Show data-values on hover */
@@ -450,8 +450,8 @@ textarea:hover {
   width:fit-content;
   padding: 0.25rem;
   height:auto;
-  white-space: pre-line;
-  word-break: keep-all;
+  white-space: pre;
+  word-break: normal;
 }
 
 /* Show ::after only on hover */
