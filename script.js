@@ -226,33 +226,27 @@ function displayResult(index) {
 
     if (detections.size === 0) return;
 
-    // ─── CREATE TAGS WITH PREDEFINED POSITIONS ───
+    // ─── CREATE TAGS  ───
     detections.forEach((values, type) => {
-        const tag = document.createElement('div');
-        tag.className = 'sensitive-type-tag';
+    const tag = document.createElement('div');
+    tag.className = 'sensitive-type-tag';
 
-        let displayText = type.toUpperCase();
-        if (type.toLowerCase() === 'keywords') {
-            displayText = 'CONTAINS';
-        }
+    let displayText = type.toUpperCase();
+    if (type.toLowerCase() === 'keywords') {
+        displayText = 'CONTAINS';
+    }
 
-        // Create wrapper span for the type text
-        const typeSpan = document.createElement('span');
-        typeSpan.className = 'tag-type';
-        typeSpan.textContent = displayText;
+    const typeSpan = document.createElement('span');
+    typeSpan.className = 'tag-type';
+    typeSpan.textContent = displayText;
 
-        tag.appendChild(typeSpan);
+    tag.appendChild(typeSpan);
 
-        // Add the values as data attribute (for hover display)
-        tag.setAttribute('data-values', values.join('\n'));
-        tag.setAttribute('data-type', type.toLowerCase());
+    tag.setAttribute('data-values', Array.isArray(values) ? values.join('\n') : values || '(no details)');
+    tag.setAttribute('data-type', type.toLowerCase());
 
-        // Optional: add title tooltip for accessibility
-        tag.setAttribute('title', values || '(no details)');
-
-        container.appendChild(tag);
-
-    });
+    container.appendChild(tag);
+});
 
     console.log(JSON.stringify(result.content));
 
