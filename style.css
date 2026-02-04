@@ -450,7 +450,7 @@ textarea:hover {
   width:fit-content;
   padding: 0.25rem;
   height:auto;
-  white-space: pre-line !important;
+  white-space: pre-line;
   overflow-wrap: break-word;
 }
 
@@ -458,33 +458,6 @@ textarea:hover {
 .sensitive-type-tag:hover::after {
   display: block;
 }
-
-/* .sensitive-type-tag::after {
-    content: attr(data-values);
-    position: absolute;
-    right: 0%;
-    bottom: 50%;
-    transform: translateX(-50%) translateY(-50%);
-    background: #eeeeeef2;
-    color: var(--text-primary);
-    font-size: 0.8rem;
-    font-family: var(--font-primary);
-    padding: 0.7em 1.1em;
-    border-radius: 6px;
-    border: 1px solid #e63946;
-    white-space: pre-wrap;
-    width: fit-content;
-    max-width: 320px;
-    min-width: 160px;
-    text-align: left;
-    line-height: 1.4;
-    pointer-events: none;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.2s ease, bottom 0.18s ease;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.65);
-    z-index: 20;
-} */
 
 .sensitive-type-tag:hover::after {
     opacity: 1;
