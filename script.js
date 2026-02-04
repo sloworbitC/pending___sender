@@ -1,10 +1,8 @@
 // --- Navigation ---
 function showSection(sectionId) {
-    // Hide all sections
     document.getElementById('compose-section').classList.add('hidden');
     document.getElementById('email-list-section').classList.add('hidden');
 
-    // Show requested section
     if (sectionId === 'compose') {
         document.getElementById('compose-section').classList.remove('hidden');
     } else if (['inbox', 'sent', 'trash', 'spam'].includes(sectionId)) {
@@ -15,23 +13,19 @@ function showSection(sectionId) {
 function toggleBottomNav() {
     const nav = document.getElementById('bottom-nav');
     nav.classList.toggle('collapsed');
-
-    // Optional: save preference in localStorage
     localStorage.setItem('bottomNavCollapsed', nav.classList.contains('collapsed'));
 }
 
-// Optional: restore state on load
 window.addEventListener('load', () => {
     if (localStorage.getItem('bottomNavCollapsed') === 'true') {
         document.getElementById('bottom-nav').classList.add('collapsed');
     }
 });
 
-//--------upload
+// -------- Upload handling
 
 const dropZone = document.querySelector('.upload-zone');
 
-// Highlight when dragging over
 ['dragover', 'dragenter'].forEach(eventName => {
     dropZone.addEventListener(eventName, e => {
         e.preventDefault();
@@ -39,30 +33,23 @@ const dropZone = document.querySelector('.upload-zone');
     });
 });
 
-// Remove highlight when leaving
 ['dragleave', 'drop'].forEach(eventName => {
     dropZone.addEventListener(eventName, () => {
         dropZone.classList.remove('drag-over');
     });
 });
 
-// Handle dropped files (same as selected files)
 dropZone.addEventListener('drop', e => {
     e.preventDefault();
     const droppedFiles = Array.from(e.dataTransfer.files);
     if (droppedFiles.length > 0) {
-        // Reuse your existing file handling logic
-        handleNewFiles(droppedFiles); // ← rename your upload handler to this
+        handleNewFiles(droppedFiles);
     }
 });
-
-
 
 // Global state
 let attachedFiles = [];
 let scanResults = [];
-
-
 
 // UI elements
 const fileInput = document.getElementById('fileInput');
@@ -71,7 +58,7 @@ const warningBox = document.getElementById('warning-box');
 const warningDetails = document.getElementById('warning-details');
 const attachmentList = document.getElementById('attachment-list');
 
-// Create dropdown + status badge
+// Create file count badge
 const attachmentControls = document.createElement('div');
 attachmentControls.style.margin = '10px 0';
 fileInput.parentNode.insertBefore(attachmentControls, fileInput.nextSibling);
@@ -82,26 +69,24 @@ fileInput.addEventListener('change', () => {
     handleNewFiles(fileInput.files);
 });
 
-// When files are selected (can happen multiple times)
+// Core upload handler
 async function handleNewFiles(files) {
-
     const newFiles = Array.from(files);
+
     if (newFiles.some(f => f.size > 4 * 1024 * 1024)) {
         if (previewBgLayer) {
-            previewBgLayer.innerHTML = '<span style="color:black; font-weight:bold; font size: 4rem">FILE TOO LARGE<br>Max. ~4 MB per file.<br>Try smaller.</span>';
+            previewBgLayer.innerHTML = '<span style="color:black; font-weight:bold; font-size:4rem">FILE TOO LARGE<br>Max. ~4 MB per file.<br>Try smaller.</span>';
         }
         return;
     }
+
     if (newFiles.length === 0) return;
 
     attachedFiles.push(...newFiles);
     fileInput.value = '';
 
-    // Null check + fallback message
     if (previewBgLayer) {
-        previewBgLayer.textContent = `Scanning ${newFiles.length} file(s)...`;
-    } else {
-        console.warn("previewBgLayer element not found in DOM");
+        previewBgLayer.innerHTML = `Scanning ${newFiles.length} file(s)...`;
     }
 
     const formData = new FormData();
@@ -109,51 +94,38 @@ async function handleNewFiles(files) {
 
     try {
         console.log('Sending fetch to /api/scan');
+        const res = await fetch('/api/scan', { method: 'POST', body: formData });
+        console.log('Fetch response status:', res.status);
 
-        let newResults;
+        if (!res.ok) throw new Error('Scan failed: ' + res.status);
 
-        // !!!Local simulation when running from file:// or localhost
-        if (location.protocol === 'file:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-            console.log('LOCAL MODE: Using simulated scan results');
-            newResults = simulatedScanResults;
-        } else {
-            // Real Vercel backend call
-            const res = await fetch('/api/scan', { method: 'POST', body: formData });
-            console.log('Fetch response status:', res.status);
-
-            if (!res.ok) throw new Error('Scan failed: ' + res.status);
-
-            newResults = await res.json();
-        }
-
+        const newResults = await res.json();
         console.log('Received results:', newResults);
 
         scanResults.push(...newResults);
-        console.log('scanResults after push:', scanResults.length);
+        console.log('scanResults length:', scanResults.length);
 
         updateAttachmentList();
 
         if (scanResults.length > 0) {
-            console.log('Calling displayResult with index:', scanResults.length - 1);
-            displayResult(scanResults.length - 1);
-        } else {
-            console.log('No results - skipping displayResult');
-        }
-
-        if (previewBgLayer) {
-            previewBgLayer.textContent = scanResults[scanResults.length - 1]?.content || '';
+            const latestIndex = scanResults.length - 1;
+            console.log('Displaying latest result at index:', latestIndex);
+            displayResult(latestIndex);
         }
     } catch (err) {
         console.error("Upload error:", err);
-        if (previewBgLayer) previewBgLayer.textContent = `Error: ${err.message}`;
+        if (previewBgLayer) {
+            previewBgLayer.innerHTML = `Error: ${err.message}`;
+        }
     }
 
+    // Always update list after attempt (even on error)
     updateAttachmentList();
-    displayResult(scanResults.length - 1);
 }
 
-// Update dropdown options + badge
+// Update file count badge
 function updateDropdownAndBadge() {
+    if (!fileCountBadge) return;
 
     if (attachedFiles.length === 0) {
         fileCountBadge.textContent = '0 files';
@@ -176,7 +148,6 @@ function updateDropdownAndBadge() {
     fileCountBadge.style.background = attachedFiles.length > 0 ? '#C78E3A' : '#444';
 }
 
-
 let currentPreviewIndex = -1;
 
 function displayResult(index) {
@@ -184,7 +155,7 @@ function displayResult(index) {
 
     if (index < 0 || !previewBgLayer) {
         console.log('Early return - invalid index or no previewBgLayer');
-        if (previewBgLayer) previewBgLayer.textContent = '';
+        if (previewBgLayer) previewBgLayer.innerHTML = '';
         currentPreviewIndex = -1;
         updateActiveRow();
         return;
@@ -195,32 +166,25 @@ function displayResult(index) {
 
     if (!result) {
         console.log('No result for index - returning');
+        previewBgLayer.innerHTML = '';
         return;
     }
 
-    console.log('Raw content length:', result.content?.length || 0);
-    console.log('Has newline?', result.content?.includes('\n'));
-    console.log('Raw content sample:', JSON.stringify(result.content?.substring(0, 300) || ''));
-
-    // Your normalization
-    const normalized = (result.content || '')
+    const raw = result.content || '';
+    const normalized = raw
         .replace(/\r\n|\r|\n/g, '<br>')
         .replace(/  +/g, ' &nbsp;');
 
     previewBgLayer.innerHTML = normalized;
+
     currentPreviewIndex = index;
     updateActiveRow();
 
     const container = document.querySelector('.sensitive-tags-container');
-    if (!container) {
-        console.warn("sensitive-tags-container not found");
-        return;
-    }
+    if (!container) return;
 
-    // Clear old tags
     container.innerHTML = '';
 
-    // Collect detections
     const detections = new Map();
 
     if (result.sensitive_terms?.length > 0) {
@@ -229,14 +193,13 @@ function displayResult(index) {
 
     if (result.sensitive_patterns) {
         Object.entries(result.sensitive_patterns).forEach(([key, arr]) => {
-            if (Array.isArray(arr) && arr.length > 0) {
+            if (arr?.length > 0) {
                 const cleanKey = key.toUpperCase().replace(/_/g, ' ').toLowerCase();
                 detections.set(cleanKey, arr.join(', '));
             }
         });
     }
 
-    // Show/hide the whole warning panel
     const panel = document.getElementById('warning-panel');
     if (panel) {
         panel.classList.toggle('hidden', detections.size === 0);
@@ -244,7 +207,6 @@ function displayResult(index) {
 
     if (detections.size === 0) return;
 
-    // ─── CREATE TAGS WITH PREDEFINED POSITIONS ───
     detections.forEach((values, type) => {
         const tag = document.createElement('div');
         tag.className = 'sensitive-type-tag';
@@ -254,31 +216,20 @@ function displayResult(index) {
             displayText = 'CONTAINS';
         }
 
-        // Create wrapper span for the type text
         const typeSpan = document.createElement('span');
         typeSpan.className = 'tag-type';
         typeSpan.textContent = displayText;
 
         tag.appendChild(typeSpan);
 
-        // Add the values as data attribute (for hover display)
-        tag.setAttribute('data-values', values || '(no details)');
         tag.setAttribute('data-type', type.toLowerCase());
-
-        // Optional: add title tooltip for accessibility
-        tag.setAttribute('title', values || '(no details)');
+        tag.setAttribute('data-values', values || '(no details)');
 
         container.appendChild(tag);
-
     });
-
-    console.log(JSON.stringify(result.content));
-
 }
 
-
 function displayWarnings(terms, patterns) {
-    // Reusing the logic for Body text scanning
     warningDetails.innerHTML = '';
     let hasIssues = false;
 
@@ -286,6 +237,7 @@ function displayWarnings(terms, patterns) {
         warningDetails.innerHTML += `<div><strong>Keywords:</strong> ${terms.join(', ')}</div>`;
         hasIssues = true;
     }
+
     if (Object.keys(patterns).length > 0) {
         for (const [key, matches] of Object.entries(patterns)) {
             warningDetails.innerHTML += `<div><strong>${key}:</strong> ${matches.join(', ')}</div>`;
@@ -297,7 +249,6 @@ function displayWarnings(terms, patterns) {
     else warningBox.classList.add('hidden');
 }
 
-// New helper function
 function updateActiveRow() {
     document.querySelectorAll('.file-row').forEach(row => {
         row.classList.remove('active');
@@ -309,9 +260,6 @@ function updateActiveRow() {
         );
         if (activeRow) {
             activeRow.classList.add('active');
-            console.log("Activated row for index:", currentPreviewIndex);
-        } else {
-            console.warn("No row found for index:", currentPreviewIndex);
         }
     }
 }
@@ -320,7 +268,6 @@ function updateActiveRow() {
 document.getElementById('emailForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    // Clear previous errors (keep your validation)
     document.querySelectorAll('.field-error').forEach(el => {
         el.classList.remove('visible');
         el.textContent = '';
@@ -358,18 +305,17 @@ document.getElementById('emailForm').addEventListener('submit', async (e) => {
     if (!isValid) return;
 
     const statusDiv = document.getElementById('send-status');
-    statusDiv.textContent = "✔  Compose & scan complete (demo mode)";
+    statusDiv.textContent = "✔ Compose & scan complete (demo mode)";
     statusDiv.style.color = "rgb(45, 170, 149)";
 
-    // Reset form & state
     e.target.reset();
     attachedFiles = [];
     scanResults = [];
     updateAttachmentList();
-    clearPreview();  // ← this already clears preview + warnings
+    clearPreview();
 });
 
-// Live validation for email
+// Live validation
 const recipientInput = document.getElementById('recipient');
 const emailError = document.getElementById('email-error');
 
@@ -377,15 +323,12 @@ recipientInput.addEventListener('input', () => {
     const email = recipientInput.value.trim();
     emailError.classList.remove('visible');
     emailError.textContent = '';
-
-    // Optional: show error only if user has typed something invalid
     if (email.length > 0 && (!email.includes('@') || !email.includes('.'))) {
         emailError.textContent = "Please enter a valid email address.";
         emailError.classList.add('visible');
     }
 });
 
-// Live validation for subject
 const subjectInput = document.getElementById('subject');
 const subjectError = document.getElementById('subject-error');
 
@@ -393,7 +336,6 @@ subjectInput.addEventListener('input', () => {
     const subject = subjectInput.value.trim();
     subjectError.classList.remove('visible');
     subjectError.textContent = '';
-
     if (subject.length === 0) {
         subjectError.textContent = "Subject is required.";
         subjectError.classList.add('visible');
@@ -407,10 +349,9 @@ async function loadEmails(folder) {
     const container = document.getElementById('email-container');
     container.innerHTML = '<p>(Demo mode: no real emails loaded)</p>';
 
-    // Optional: fake some static cards so it looks alive
     const mockEmails = [
         { subject: "Welcome to Demo", sender: "demo@example.com", body: "This is just placeholder content." },
-        { subject: "Mock Enail", sender: "boss@company.hk", body: "demo content" }
+        { subject: "Mock Email", sender: "boss@company.hk", body: "demo content" }
     ];
 
     mockEmails.forEach(email => {
@@ -425,7 +366,7 @@ async function loadEmails(folder) {
     });
 }
 
-// Render scrolling list
+// Render scrolling attachment list
 function updateAttachmentList() {
     if (!attachmentList) {
         console.error("attachment-list element missing!");
@@ -437,12 +378,10 @@ function updateAttachmentList() {
 
     if (attachedFiles.length === 0) return;
 
-    console.log("Rendering", attachedFiles.length, "files");
-
     attachedFiles.forEach((file, idx) => {
         const row = document.createElement('div');
         row.className = 'file-row';
-        row.dataset.index = idx;                    // ← crucial: store the index
+        row.dataset.index = idx;
 
         const hasWarning = scanResults[idx]?.sensitive_terms?.length > 0 ||
             Object.keys(scanResults[idx]?.sensitive_patterns || {}).length > 0;
@@ -473,7 +412,6 @@ function updateAttachmentList() {
         attachmentList.appendChild(row);
     });
 
-    // Show/hide Clear Preview button
     const clearBtn = document.getElementById('clear-preview-btn');
     if (clearBtn) {
         clearBtn.classList.toggle('visible', attachedFiles.length > 0);
@@ -488,20 +426,16 @@ window.removeFile = function (idx) {
     attachedFiles.splice(idx, 1);
     scanResults.splice(idx, 1);
     updateAttachmentList();
+
     if (scanResults.length > 0) {
         displayResult(0);
     } else {
-        previewBgLayer.textContent = '';
         clearPreview();
     }
 
     updateClearButton();
     updateActiveRow();
 };
-
-// Display result in foreground + background
-
-
 
 function updateClearButton() {
     const clearBtn = document.getElementById('clear-preview-btn');
@@ -516,17 +450,12 @@ function clearPreview() {
         previewBgLayer.innerHTML = '';
     }
 
-    // Clear warning panel & tags
     const panel = document.getElementById('warning-panel');
-    if (panel) {
-        panel.classList.add('hidden');
-    }
+    if (panel) panel.classList.add('hidden');
 
     const container = document.querySelector('.sensitive-tags-container');
-    if (container) {
-        container.innerHTML = '';  // remove all tags
-    }
+    if (container) container.innerHTML = '';
 
-    // Optional: reset preview index if it affects anything
     currentPreviewIndex = -1;
+    updateActiveRow();
 }
