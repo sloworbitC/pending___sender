@@ -87,13 +87,13 @@ export default async function handler(req, res) {
           );
 
           // Regex scanning
-          const foundPatterns = {};
-          for (const [name, regex] of Object.entries(patterns)) {
-            const matches = cleanContent.match(regex);
-            if (matches) {
-              foundPatterns[name] = [...new Set(matches)];
-            }
+        const foundPatterns = {};
+        for (const [name, regex] of Object.entries(patterns)) {
+          const matches = content.matchAll(regex);  
+        if (matches) {
+          foundPatterns[name] = Array.from(matches, m => m[0].trim());  
           }
+        }
 
           return {
             filename: file.originalFilename,
