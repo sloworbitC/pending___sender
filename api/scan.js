@@ -15,14 +15,14 @@ const sensitiveTerms = [
   "birth", "credit card", "password", "confidential"
 ];
 
-// Regex patterns
+// Regex patterns — global flag is important
 const patterns = {
-  "Phone Number": /(\+?\d{1,3}[\s.-]?)?$$   ?\d{3}   $$?[\s.-]?\d{3}[\s.-]?\d{4}/gi,
+  "Phone Number": /(\+?\d{1,3}[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/gi,
   "Email": /[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+/gi,
   "Credit Card": /\b(?:\d{4}[ -]?){3}\d{4}\b/gi,
 };
 
-// Helper: collect blocks around sensitive terms
+// Helper: collect lines around sensitive terms for context
 function collectBlocks(text, terms) {
   const blocks = {};
   const lines = text.split(/\r\n|\r|\n/);
@@ -32,13 +32,13 @@ function collectBlocks(text, terms) {
     blocks[term] = [];
     lines.forEach((line, idx) => {
       if (line.toLowerCase().includes(lowerTerm)) {
-        // Collect the line + 2 lines before/after for context
+        // Grab current line + 2 before + 2 after
         const start = Math.max(0, idx - 2);
         const end = Math.min(lines.length, idx + 3);
         blocks[term].push(...lines.slice(start, end));
       }
     });
-    // Remove duplicates
+    // Dedupe lines
     blocks[term] = [...new Set(blocks[term])];
   });
 
@@ -70,73 +70,68 @@ export default async function handler(req, res) {
 
           let content = "";
 
-          // PDF
           if (ext === ".pdf") {
             const data = await pdf(buffer);
             content = data.text || "";
-          }
-
-          // DOCX
-          else if (ext === ".docx") {
+          } else if (ext === ".docx") {
             const { value } = await mammoth.extractRawText({ buffer });
             content = value;
-          }
-
-          // TXT / CSV
-          else if (ext === ".txt" || ext === ".csv") {
+          } else if (ext === ".txt" || ext === ".csv") {
             content = buffer.toString("utf-8");
-          }
-
-          // XLS / XLSX
-          else if (ext === ".xls" || ext === ".xlsx") {
+          } else if (ext === ".xls" || ext === ".xlsx") {
             const workbook = xlsx.read(buffer, { type: "buffer" });
             const sheet = workbook.Sheets[workbook.SheetNames[0]];
             content = xlsx.utils.sheet_to_txt(sheet);
-          }
-
-          else {
+          } else {
             content = "[Unsupported file type]";
           }
 
-          // Cleanup temp file
           await fs.unlink(file.filepath).catch(() => {});
 
-          // Clean content for better regex detection
-          const cleanContent = content;
-
-          // Sensitive term scanning
-          const foundTerms = sensitiveTerms.filter((term) =>
-            cleanContent.toLowerCase().includes(term.toLowerCase())
+          // Sensitive keyword detection (global)
+          const foundTerms = sensitiveTerms.filter(term =>
+            content.toLowerCase().includes(term.toLowerCase())
           );
 
-          // Collect blocks
-          const blocks = collectBlocks(cleanContent, sensitiveTerms);
+          // Context-aware pattern matching using blocks
+          const blocks = collectBlocks(content, sensitiveTerms);
 
-          // Regex scanning inside blocks
           const foundPatterns = {};
-          for (const [label, lines] of Object.entries(blocks)) {
-            const blockText = lines.join("\n");
+          for (const [blockLabel, blockLines] of Object.entries(blocks)) {
+            if (blockLines.length === 0) continue;
+
+            const blockText = blockLines.join("\n");
+
             for (const [patternLabel, regex] of Object.entries(patterns)) {
-              const matches = blockText.match(regex);
-              if (matches) {
-                if (!foundPatterns[patternLabel]) foundPatterns[patternLabel] = [];
+              // Use matchAll to get every individual match
+              const matchIterator = blockText.matchAll(regex);
+              const matches = Array.from(matchIterator, m => m[0].trim());
+
+              if (matches.length > 0) {
+                if (!foundPatterns[patternLabel]) {
+                  foundPatterns[patternLabel] = [];
+                }
                 foundPatterns[patternLabel].push(...matches);
               }
             }
           }
 
-          // Remove duplicates
+          // Deduplicate
           for (const key in foundPatterns) {
             foundPatterns[key] = [...new Set(foundPatterns[key])];
           }
 
+          // Debug log for Vercel functions
+          console.log('Extracted patterns:', foundPatterns);
+
           return {
             filename: file.originalFilename,
-            content: cleanContent.substring(0, 8000),
+            content: content.substring(0, 8000),
             sensitive_terms: foundTerms,
             sensitive_patterns: foundPatterns,
           };
         } catch (err) {
+          console.error("File error:", err.message);
           return {
             filename: file.originalFilename,
             content: "Error processing file: " + err.message,
@@ -149,6 +144,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json(results);
   } catch (err) {
+    console.error("Handler error:", err.message);
     return res.status(500).json({ error: "Scan failed: " + err.message });
   }
 }
