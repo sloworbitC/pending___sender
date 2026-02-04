@@ -246,10 +246,9 @@ function displayResult(index) {
         
 const valuesStr = typeof values === 'string'
   ? values
-      .split(/,\s*/)                          // split on comma + optional spaces
-      .map(item => item.trim())               // clean each item
-      .map(item => item.replace(/ /g, '&nbsp;').replace(/-/g, '&#8209;'))  // non-breaking space & hyphen
-      .join(',<br>')                          // comma + line break between items
+      .split(/,\s*/)               // split on comma + optional spaces
+      .map(item => item.trim())    // clean each item
+      .join('\n')                  // real newline between items
   : '(no details)';
 
 tag.setAttribute('data-values', valuesStr);
