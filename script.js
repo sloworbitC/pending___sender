@@ -206,7 +206,7 @@ function displayResult(index) {
     const detections = new Map();
 
     if (result.sensitive_terms?.length > 0) {
-        detections.set('keywords', result.sensitive_terms.join(', '));
+        detections.set(cleanKey, arr);
     }
 
     if (result.sensitive_patterns) {
