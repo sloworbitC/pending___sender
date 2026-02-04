@@ -240,7 +240,9 @@ function displayResult(index) {
     typeSpan.textContent = displayText;
 
     tag.appendChild(typeSpan);
-
+        
+    console.log('Raw values array for', type, ':', values);
+console.log('Joined with \\n:', values.join('\n'));
     tag.setAttribute('data-values', Array.isArray(values) ? values.join('\n') : values || '(no details)');
     tag.setAttribute('data-type', type.toLowerCase());
 
