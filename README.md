@@ -12,7 +12,8 @@ Drop an attachment with sensitive information into the compose interface to trig
 
 # Tech Notes
 
-Frontend-focused prototype<br>Serverless scanning via Vercel<br>Regex-based detection (PDF / TXT)<br>designed for interpretability, not accuracy claims
+Frontend-focused prototype<br>Serverless scanning via Vercel<br>Regex-based detection (PDF, DOCX, TXT, CSV, XLS/XLSX)
+<br>designed for interpretability, not accuracy claims
 
 
 # Status
