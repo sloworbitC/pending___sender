@@ -367,7 +367,7 @@ textarea:hover {
     padding: 10px;
 }
 
-.-tag {
+.sensitive-type-tag {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -391,7 +391,7 @@ textarea:hover {
 }
 
 
-.-tag[data-type="keywords"] {
+.sensitive-type-tag[data-type="keywords"] {
     font-size: 3rem;
     color: #e63946;
     font-weight: 900;
@@ -399,32 +399,32 @@ textarea:hover {
     left: 60%;
 }
 
-.-tag[data-type="email"] {
+.sensitive-type-tag[data-type="email"] {
     top: 20%;
     left: 0%;
 }
 
-.-tag[data-type="phone"] {
+.sensitive-type-tag[data-type="phone"] {
     top: 45%;
     left: 85%;
 }
 
-.-tag[data-type="password"] {
+.sensitive-type-tag[data-type="password"] {
     top: 75%;
     left: 65%;
 }
 
-.-tag[data-type="id"] {
+.sensitive-type-tag[data-type="id"] {
     top: 35%;
     left: 30%;
 }
 
-.-tag[data-type="credit card"] {
+.sensitive-type-tag[data-type="credit card"] {
     top: 60%;
     left: 15%;
 }
 
-.-tag:hover {
+.sensitive-type-tag:hover {
   content: '';
   transform: translate(-50%, -50%) rotate(0deg) scale(1.1);
   color: #111;
@@ -435,7 +435,7 @@ textarea:hover {
   text-align: left;
 }
 
-.-tag:hover .tag-type {
+.sensitive-type-tag:hover .tag-type {
   display: none;
 }
 /* Show data-values on hover */
