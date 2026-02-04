@@ -100,6 +100,58 @@ export default async function handler(req, res) {
             }
           }
 
+          // 1. Define a helper to collect context blocks around sensitive terms
+function collectBlocks(text, terms) {
+  const blocks = {};
+  const lines = text.split(/\r\n|\r|\n/);
+
+  terms.forEach(term => {
+    const lowerTerm = term.toLowerCase();
+    blocks[term] = [];
+    lines.forEach((line, idx) => {
+      if (line.toLowerCase().includes(lowerTerm)) {
+        // Collect the line + 2 lines before/after for context
+        const start = Math.max(0, idx - 2);
+        const end = Math.min(lines.length, idx + 3);
+        blocks[term].push(...lines.slice(start, end));
+      }
+    });
+    // Remove duplicates and join later
+    blocks[term] = [...new Set(blocks[term])];
+  });
+
+  return blocks;
+}
+
+// 2. Use it to collect blocks
+const blocks = collectBlocks(content, sensitiveTerms);
+
+// 3. Scan patterns INSIDE each block (context-aware)
+const foundPatterns = {};
+for (const [blockLabel, blockLines] of Object.entries(blocks)) {
+  if (blockLines.length === 0) continue;
+
+  const blockText = blockLines.join('\n');
+
+  for (const [patternLabel, regex] of Object.entries(patterns)) {
+    // Use matchAll to get all matches as separate items
+    const matchIterator = blockText.matchAll(regex);
+    const matches = Array.from(matchIterator, m => m[0].trim());
+
+    if (matches.length > 0) {
+      if (!foundPatterns[patternLabel]) {
+        foundPatterns[patternLabel] = [];
+      }
+      foundPatterns[patternLabel].push(...matches);
+    }
+  }
+}
+
+// 4. Remove duplicates across all blocks
+for (const key in foundPatterns) {
+  foundPatterns[key] = [...new Set(foundPatterns[key])];
+}
+
           return {
             filename: file.originalFilename,
             content: content.substring(0, 8000), // keep your limit
