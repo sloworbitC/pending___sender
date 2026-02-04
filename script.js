@@ -206,7 +206,7 @@ function displayResult(index) {
     const detections = new Map();
 
     if (result.sensitive_terms?.length > 0) {
-        detections.set(cleanKey, arr);
+        detections.set('keywords', result.sensitive_terms.join(', '));
     }
 
     if (result.sensitive_patterns) {
@@ -243,7 +243,8 @@ function displayResult(index) {
 
         tag.appendChild(typeSpan);
 
-       tag.setAttribute('data-values', values.map(v => `• ${v}`).join('<br>'));
+        // Add the values as data attribute (for hover display)
+        tag.setAttribute('data-values', values || '(no details)');
         tag.setAttribute('data-type', type.toLowerCase());
 
         // Optional: add title tooltip for accessibility
@@ -347,7 +348,7 @@ document.getElementById('emailForm').addEventListener('submit', async (e) => {
     attachedFiles = [];
     scanResults = [];
     updateAttachmentList();
-    clearPreview();  // ← this already clears preview + warnings
+    clearPreview();  
 });
 
 // Live validation for email
@@ -510,4 +511,4 @@ function clearPreview() {
 
     // Optional: reset preview index if it affects anything
     currentPreviewIndex = -1;
-}
+} 
