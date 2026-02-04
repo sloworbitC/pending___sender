@@ -450,8 +450,8 @@ textarea:hover {
   width:fit-content;
   padding: 0.25rem;
   height:auto;
-  white-space: pre-wrap;
-  word-break:noraml;
+  white-space: pre;
+  word-break: keep-all;
 }
 
 /* Show ::after only on hover */
