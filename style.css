@@ -218,7 +218,7 @@ main {
     word-wrap: break-word;
     word-break: break-word;
     overflow-wrap: break-word;
-    padding: 3rem 5rem;
+    padding: 5rem 8rem;
     user-select: none;
      filter: blur(1.5px); }
 
@@ -771,7 +771,10 @@ select#select-doc:not(.hidden) {
 }
 
  @media (max-width: 1100px) {
-
+    body{
+    font-size: 0.8rem;
+    }
+     
     .form-field {
         position: static;
         width: 100%;
@@ -806,4 +809,5 @@ select#select-doc:not(.hidden) {
    #sendBtn{
      margin-bottom: 200px;
    }
+
 }
