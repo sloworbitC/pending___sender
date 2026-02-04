@@ -9,19 +9,41 @@ export const config = {
   api: { bodyParser: false }
 };
 
-// Sensitive terms (used for context blocks or keyword detection)
+// Sensitive terms
 const sensitiveTerms = [
   "name", "address", "id", "phone", "email",
   "birth", "credit card", "password", "confidential"
 ];
 
-// Regex patterns for each category
+// Regex patterns
 const patterns = {
-  "credit Card": /\b(?:\d[ -]*?){13,16}\b/g,
-  "phone": /(\+?\d{1,3}[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b/g,
-  "email": /[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+/g,
+  "Phone Number": /(\+?\d{1,3}[\s.-]?)?$$   ?\d{3}   $$?[\s.-]?\d{3}[\s.-]?\d{4}/gi,
+  "Email": /[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+/gi,
+  "Credit Card": /\b(?:\d{4}[ -]?){3}\d{4}\b/gi,
 };
 
+// Helper: collect blocks around sensitive terms
+function collectBlocks(text, terms) {
+  const blocks = {};
+  const lines = text.split(/\r\n|\r|\n/);
+
+  terms.forEach(term => {
+    const lowerTerm = term.toLowerCase();
+    blocks[term] = [];
+    lines.forEach((line, idx) => {
+      if (line.toLowerCase().includes(lowerTerm)) {
+        // Collect the line + 2 lines before/after for context
+        const start = Math.max(0, idx - 2);
+        const end = Math.min(lines.length, idx + 3);
+        blocks[term].push(...lines.slice(start, end));
+      }
+    });
+    // Remove duplicates
+    blocks[term] = [...new Set(blocks[term])];
+  });
+
+  return blocks;
+}
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -54,13 +76,10 @@ export default async function handler(req, res) {
             content = data.text || "";
           }
 
-          // DOCX — better to use convertToHtml for paragraphs
+          // DOCX
           else if (ext === ".docx") {
-            const { value } = await mammoth.convertToHtml({ buffer });
-            content = value
-              .replace(/<[^>]+>/g, '')         // strip HTML tags
-              .replace(/\n{3,}/g, '\n\n')      // normalize multiple newlines
-              .trim();
+            const { value } = await mammoth.extractRawText({ buffer });
+            content = value;
           }
 
           // TXT / CSV
@@ -82,37 +101,47 @@ export default async function handler(req, res) {
           // Cleanup temp file
           await fs.unlink(file.filepath).catch(() => {});
 
-          // Sensitive term scanning (simple keyword presence)
-          const foundTerms = sensitiveTerms.filter(term =>
-            content.toLowerCase().includes(term.toLowerCase())
+          // Clean content for better regex detection
+          const cleanContent = content;
+
+          // Sensitive term scanning
+          const foundTerms = sensitiveTerms.filter((term) =>
+            cleanContent.toLowerCase().includes(term.toLowerCase())
           );
 
-          // Regex scanning — collect separate matches
-          const foundPatterns = {};
-          for (const [name, regex] of Object.entries(patterns)) {
-            // Use matchAll to get all matches as array
-            const matchesIterator = content.matchAll(regex);
-            const matches = Array.from(matchesIterator, m => m[0].trim());
+          // Collect blocks
+          const blocks = collectBlocks(cleanContent, sensitiveTerms);
 
-            if (matches.length > 0) {
-              // Remove duplicates and store as array
-              foundPatterns[name] = [...new Set(matches)];
+          // Regex scanning inside blocks
+          const foundPatterns = {};
+          for (const [label, lines] of Object.entries(blocks)) {
+            const blockText = lines.join("\n");
+            for (const [patternLabel, regex] of Object.entries(patterns)) {
+              const matches = blockText.match(regex);
+              if (matches) {
+                if (!foundPatterns[patternLabel]) foundPatterns[patternLabel] = [];
+                foundPatterns[patternLabel].push(...matches);
+              }
             }
+          }
+
+          // Remove duplicates
+          for (const key in foundPatterns) {
+            foundPatterns[key] = [...new Set(foundPatterns[key])];
           }
 
           return {
             filename: file.originalFilename,
-            content: content.substring(0, 8000), // keep your limit
+            content: cleanContent.substring(0, 8000),
             sensitive_terms: foundTerms,
-            sensitive_patterns: foundPatterns
+            sensitive_patterns: foundPatterns,
           };
         } catch (err) {
-          console.error("File processing error:", err);
           return {
             filename: file.originalFilename,
             content: "Error processing file: " + err.message,
             sensitive_terms: [],
-            sensitive_patterns: {}
+            sensitive_patterns: {},
           };
         }
       })
@@ -120,7 +149,6 @@ export default async function handler(req, res) {
 
     return res.status(200).json(results);
   } catch (err) {
-    console.error("Handler error:", err);
     return res.status(500).json({ error: "Scan failed: " + err.message });
   }
 }
