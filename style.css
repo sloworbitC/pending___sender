@@ -130,14 +130,12 @@ body {
     transform: scaleX(0.5);
 }
 
-/* Make main content use full height when nav is collapsed */
 main {
     flex: 1;
     position: relative;
     align-items: center;
     min-height: 100vh;
     padding: 40px 20px 120px;
-    /* reserve space for nav when visible */
     transition: padding-bottom 0.35s;
 }
 
@@ -145,11 +143,9 @@ main {
     padding-bottom: 0;
 }
 
-/* Hide scrollbar in nav */
 .nav-items::-webkit-scrollbar {
     display: none;
 }
-
 
 
 .header-title {
@@ -172,16 +168,14 @@ main {
 }
 
 
-
-
 .compose-grid {
     position: fixed;
     width: 90vw;
     max-width: 1600px;
     height: 88vh;
-    margin-top: 2vh;
-    margin-left: auto;
-    margin-right:auto;
+    margin-top: 2vh auto;
+    left: 50%;
+    transform: translateX(-50%);
     padding: 2rem;
     
 }
@@ -351,7 +345,7 @@ textarea:hover {
     font-weight: 600;
 }
 
-/* Right-side warning panel – small red text, no box */
+/*warning tag*/
 .warning-panel {
     position: fixed;
     top: 0;
@@ -455,7 +449,6 @@ textarea:hover {
   white-space: pre;
 }
 
-/* Show ::after only on hover */
 .sensitive-type-tag:hover::after {
   display: block;
 }
@@ -468,12 +461,11 @@ textarea:hover {
 
 
 
-
 /* Clear Preview */
 
 .clear-preview-btn {
     display: none;
-    position: absolute;
+    position: fixed;
     top:80vh;
     left: 4vw;
     width: 80px;
