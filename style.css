@@ -450,7 +450,7 @@ textarea:hover {
   width:fit-content;
   padding: 0.25rem;
   height:auto;
-  white-space: pre-line;
+  white-space: pre-line !important;
   overflow-wrap: break-word;
 }
 
