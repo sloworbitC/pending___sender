@@ -244,13 +244,9 @@ function displayResult(index) {
         tag.appendChild(typeSpan);
 
         
-        // Instead of join or anything fancy
-let valuesStr = values || '(no details)';
-
-// If values is already a comma-separated string, turn commas into line breaks
-if (typeof valuesStr === 'string') {
-  valuesStr = valuesStr.replace(/,\s*/g, ',<br>');
-}
+const valuesStr = Array.isArray(values) 
+  ? values.map(v => v.replace(/ /g, '&nbsp;').replace(/-/g, '&#8209;')).join('<br>')
+  : values || '(no details)';
 
 tag.setAttribute('data-values', valuesStr);
         tag.setAttribute('data-type', type.toLowerCase());
