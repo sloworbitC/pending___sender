@@ -13,6 +13,7 @@
 <body>
 
     <div class="app-container">
+        
         <!-- Bottom navigation bar -->
         <nav id="bottom-nav" class="bottom-nav">
             <button class="nav-toggle" onclick="toggleBottomNav()">☰</button>
@@ -28,28 +29,34 @@
         </nav>
 
         <main>
-            <div id="compose-section" class="section active">
+            <div class="compose-grid">
+                
+                <div class="header-title" id="composeTitle">COMPOSE EMAIL</div>
 
-                <div class="compose-grid">
-                    <!-- Left: centered compose form -->
-                    <div class="header-title" id="composeTitle">COMPOSE EMAIL</div>
-                    <div class="form-area centered-form">
-
-                        <form id="emailForm">
-                            <label>Recipient Email</label>
-                            <input type="email" name="recipient" id="recipient"
-                                placeholder="e.g. sloworbit@example.com">
+                <div class="form-area centered-form">
+                    <form id="emailForm">
+                        
+                        <div class="form-field recipient-field">
+                            <label for="recipient">Recipient Email</label>
+                            <input type="email" id="recipient" name="recipient"
+                                placeholder="e.g. slowOrbit@example.com">
                             <div id="email-error" class="field-error hidden"></div>
+                        </div>
 
-                            <label>Subject</label>
-                            <input type="text" name="subject" id="subject">
+                        <div class="form-field subject-field">
+                            <label for="subject">Subject</label>
+                            <input type="text" id="subject" name="subject">
                             <div id="subject-error" class="field-error hidden"></div>
+                        </div>
 
-                            <label>Body</label>
-                            <textarea name="body" id="body" rows="6"></textarea>
-                            <br>
+                        <div class="form-field body-field">
+                            <label for="body">Body</label>
+                            <textarea id="body" name="body" rows="12"></textarea>
+                        </div>
+
+                        <div class="form-field attachments-field">
                             <label>Upload Files <br><span class="fileTypes">(PDF, DOCX, TXT, CSV,
-                                    XLS/XLSX) max. 4 MB</span></label>
+                                    XLS/XLSX)</span></label>
                             <div class="upload-zone">
                                 <input type="file" id="fileInput" name="attachments" multiple
                                     accept=".pdf,.docx,.txt,.csv,.xls,.xlsx">
@@ -57,28 +64,19 @@
                                     Drag & drop files here<br>or <span class="browse">browse</span>
                                 </label>
                             </div>
-
-
                             <div id="attachment-list" class="attachment-list hidden"></div>
+                        </div>
 
-                            <button type="submit" id="sendBtn">Send</button>
-                            <div id="send-status"></div>
-                        </form>
-
-
-                    </div>
-                    <!-- Attachment list (scrolling box) -->
-                    <button id="clear-preview-btn" class="clear-preview-btn hidden" onclick="clearPreview()">
-                        Clear<br>Preview
-                    </button>
-
+                        <button type="submit" id="sendBtn">Send</button>
+                        <div id="send-status"></div>
+                    </form>
                 </div>
-                <!-- Attachment list (scrolling box) -->
+
+
+            </div>
                 <button id="clear-preview-btn" class="clear-preview-btn hidden" onclick="clearPreview()">
                     Clear<br>Preview
                 </button>
-            </div>
-
 
             <div id="email-list-section" class="section hidden">
                 <div class="header-title" id="folder-title">Inbox</div>
@@ -86,7 +84,10 @@
                     <p>Loading...</p>
                 </div>
             </div>
+
+
         </main>
+
 
         <!-- Warnings – small red text on right side -->
         <div id="warning-panel" class="warning-panel hidden">
@@ -94,8 +95,10 @@
         </div>
     </div>
     </div>
+
+
     <!-- Background preview text (full screen, faint) -->
-    <div id="preview-bg-layer" class="preview-bg-layer"></div>
+    <div id="preview-bg-layer" class="preview-bg-layer grain-overlay">
     </div>
 
 

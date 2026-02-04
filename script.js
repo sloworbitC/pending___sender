@@ -61,6 +61,56 @@ dropZone.addEventListener('drop', e => {
 // Global state
 let attachedFiles = [];
 let scanResults = [];
+/* 
+// ──────────────────────────────────────────────
+// LOCAL SIMULATION – only active when running from file:// or localhost
+// Remove or comment out this block before deploying to Vercel
+// ──────────────────────────────────────────────
+
+const simulatedScanResults = [
+    {
+        filename: "test.txt",
+        content: `My email is test@example.com
+Phone: 555-123-4567
+Credit card: 4111 1111 1111 1111
+
+This is line 4
+This is line 5 with   multiple   spaces   and   tabs
+
+Line 7 after empty line.
+Another paragraph with some confidential information.
+Last line.`,
+        sensitive_terms: ["email", "phone", "credit card", "confidential"],
+        sensitive_patterns: {
+            email: ["test@example.com"],
+            phone: ["555-123-4567"],
+            "credit card": ["4111 1111 1111 1111", "4111 1111 1111 1111", "4111 1111 1111 1111"],
+            id: ["99999"],
+            password: ["12132321"]
+        }
+    },
+    {
+        filename: "speaking.docx",
+        content: `CAM 15 Test 1.
+
+Part 1 – Listening
+You will hear people talking in different situations.
+First you have some time to look at the questions.
+
+Part 2 – Reading
+Read the text and answer the questions.
+The text is about environmental issues.
+
+Part 3 – Writing
+Write an email to a friend.
+Tell them about your weekend plans.
+
+Part 4 – Speaking
+Discuss the topic with the examiner.
+Talk about technology in daily life.`,
+    }
+];
+ */
 
 // UI elements
 const fileInput = document.getElementById('fileInput');
@@ -84,12 +134,12 @@ fileInput.addEventListener('change', () => {
 async function handleNewFiles(files) {
 
     const newFiles = Array.from(files);
-        if (newFiles.some(f => f.size > 4 * 1024 * 1024)) {
-    if (previewBgLayer) {
-        previewBgLayer.innerHTML = '<span style="color:black; font-weight:bold; font size: 4rem">FILE TOO LARGE<br>Max. ~4 MB per file.<br>Try smaller.</span>';
+    if (newFiles.some(f => f.size > 4 * 1024 * 1024)) {
+        if (previewBgLayer) {
+            previewBgLayer.innerHTML = '<span style="color:black; font-weight:bold; font size: 4rem">FILE TOO LARGE<br>Max. ~4 MB per file.<br>Try smaller.</span>';
+        }
+        return;
     }
-    return;
-}
     if (newFiles.length === 0) return;
 
     attachedFiles.push(...newFiles);
@@ -105,31 +155,73 @@ async function handleNewFiles(files) {
     const formData = new FormData();
     newFiles.forEach(f => formData.append('files', f));
 
-   try {
+    try {
         console.log('Sending fetch to /api/scan');
-        const res = await fetch('/api/scan', { method: 'POST', body: formData });
-        console.log('Fetch response status:', res.status);
 
-        if (!res.ok) throw new Error('Scan failed: ' + res.status);
+        let newResults;
+/* 
+        // !!!Local simulation when running from file:// or localhost
+        if (location.protocol === 'file:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+            console.log('LOCAL MODE: Using simulated scan results');
+            newResults = simulatedScanResults;
+        } else {
+            // Real Vercel backend call
+            const res = await fetch('/api/scan', { method: 'POST', body: formData });
+            console.log('Fetch response status:', res.status);
 
-        const newResults = await res.json();
+            if (!res.ok) throw new Error('Scan failed: ' + res.status);
+
+            newResults = await res.json();
+        }
+
         console.log('Received results:', newResults);
 
         scanResults.push(...newResults);
         console.log('scanResults after push:', scanResults.length);
 
         updateAttachmentList();
+
         if (scanResults.length > 0) {
             console.log('Calling displayResult with index:', scanResults.length - 1);
             displayResult(scanResults.length - 1);
         } else {
             console.log('No results - skipping displayResult');
         }
-        // ... rest
+
+        if (previewBgLayer) {
+            previewBgLayer.textContent = scanResults[scanResults.length - 1]?.content || '';
+        }
     } catch (err) {
         console.error("Upload error:", err);
-        // ... rest
-    }
+        if (previewBgLayer) previewBgLayer.textContent = `Error: ${err.message}`;
+    } */
+
+     try {
+            console.log('Sending fetch to /api/scan');
+         const res = await fetch('/api/scan', { method: 'POST', body: formData });
+    console.log('Fetch response status:', res.status);
+    
+            if (!res.ok) throw new Error('Scan failed: ' + res.status);
+    
+            const newResults = await res.json();
+            console.log('Received results:', newResults);
+    
+            scanResults.push(...newResults);
+            console.log('scanResults after push:', scanResults.length);
+    
+            updateAttachmentList();
+            if (scanResults.length > 0) {
+                console.log('Calling displayResult with index:', scanResults.length - 1);
+                displayResult(scanResults.length - 1);
+            } else {
+                console.log('No results - skipping displayResult');
+            }
+            // ... rest
+        } catch (err) {
+            console.error("Upload error:", err);
+            // ... rest
+        } 
+        
     updateAttachmentList();
     displayResult(scanResults.length - 1);
 }
@@ -162,7 +254,7 @@ function updateDropdownAndBadge() {
 let currentPreviewIndex = -1;
 
 function displayResult(index) {
-console.log('displayResult called with index:', index);
+    console.log('displayResult called with index:', index);
 
     if (index < 0 || !previewBgLayer) {
         console.log('Early return - invalid index or no previewBgLayer');
@@ -232,20 +324,29 @@ console.log('displayResult called with index:', index);
         tag.className = 'sensitive-type-tag';
 
         let displayText = type.toUpperCase();
-
         if (type.toLowerCase() === 'keywords') {
-            displayText = 'CONTAINS';          // ← your custom text
-            console.log("Renamed keywords to:", displayText); // debug confirmation
+            displayText = 'CONTAINS';
         }
 
-        tag.textContent = displayText;
-        tag.setAttribute('data-type', type.toLowerCase());
+        // Create wrapper span for the type text
+        const typeSpan = document.createElement('span');
+        typeSpan.className = 'tag-type';
+        typeSpan.textContent = displayText;
+
+        tag.appendChild(typeSpan);
+
+        // Add the values as data attribute (for hover display)
         tag.setAttribute('data-values', values || '(no details)');
+        tag.setAttribute('data-type', type.toLowerCase());
+
+        // Optional: add title tooltip for accessibility
+        tag.setAttribute('title', values || '(no details)');
 
         container.appendChild(tag);
+
     });
 
-   console.log(JSON.stringify(result.content));
+    console.log(JSON.stringify(result.content));
 
 }
 
