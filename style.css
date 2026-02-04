@@ -32,8 +32,6 @@ body {
     padding: 0;
     font-family: var(--font-primary);
     color: var(--text-primary);
-    /*     background-image: url(https://images.unsplash.com/photo-1579492450119-80542d516179?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D);
- */
     background-size: cover;
 }
 
@@ -540,7 +538,7 @@ select#select-doc:not(.hidden) {
 }
 
 /* Scrolling attachment list */
-/* Attachment list (keep scrolling box) */
+
 .attachment-list {
     max-height: 180px;
     overflow-y: auto;
@@ -656,7 +654,6 @@ select#select-doc:not(.hidden) {
     transition: color 0.2s ease-in-out;
 }
 
-/* Optional: stronger override for the label and browse */
 .upload-zone:hover .upload-label,
 .upload-zone.drag-over .upload-label,
 .upload-zone:hover .browse,
@@ -691,7 +688,6 @@ select#select-doc:not(.hidden) {
     opacity: 0.7;
 }
 
-/* Hide the actual input */
 #fileInput {
     position: absolute;
     inset: 0;
@@ -701,7 +697,6 @@ select#select-doc:not(.hidden) {
 }
 
 
-/* Hide when no files */
 .preview-area.hidden,
 .preview-bg-layer.hidden,
 .attachment-list.hidden {
@@ -730,7 +725,6 @@ select#select-doc:not(.hidden) {
 }
 
 /* Form layout */
-/* Specific positioning on large screens */
 @media (min-width: 1100px) {
     .recipient-field {
         top: 2%;
