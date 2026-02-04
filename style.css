@@ -168,6 +168,8 @@ main {
     text-align: right;
     letter-spacing: 1.2rem;
     margin-bottom: -5px;
+    margin-left: auto;
+    margin-right:auto;
     text-wrap: wrap;
 }
 
@@ -222,7 +224,7 @@ main {
     word-wrap: break-word;
     word-break: break-word;
     overflow-wrap: break-word;
-    padding: 80px 60px;
+    padding: 3rem 2rem;
     user-select: none;
      filter: blur(1.5px); }
 
