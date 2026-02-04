@@ -184,12 +184,12 @@ function displayResult(index) {
     console.log('Has newline?', result.content?.includes('\n'));
     console.log('Raw content sample:', JSON.stringify(result.content?.substring(0, 300) || ''));
 
-    // Your normalization
-    const normalized = (result.content || '')
-        .replace(/\r\n|\r|\n/g, '<br>')
-        .replace(/  +/g, ' &nbsp;');
+const sanitized = result.content
+  .replace(/<(?!br\s*\/?)[^>]+>/gi, '')   
+  .replace(/\r\n|\r|\n/g, '<br>')        
+  .replace(/  +/g, ' &nbsp;');
 
-    previewBgLayer.innerHTML = normalized;
+previewBgLayer.innerHTML = sanitized;
     currentPreviewIndex = index;
     updateActiveRow();
 
