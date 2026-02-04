@@ -20,11 +20,6 @@ const patterns = {
   "credit Card": /\b(?:\d[ -]*?){13,16}\b/g,
   "phone": /(\+?\d{1,3}[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b/g,
   "email": /[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+/g,
-  "id": /\b[A-Z0-9]{6,12}\b/g,
-  "birth": /\b\d{4}[\/.-]\d{1,2}[\/.-]\d{1,2}\b/g,
-  "password": /\bpassword[:=]\s*\S+/gi,
-  "address": /\d{1,5}\s+[A-Za-z0-9\s.,'-]+/g,
-  "confidential": /\bconfidential\b/gi
 };
 
 
