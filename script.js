@@ -244,9 +244,15 @@ function displayResult(index) {
         tag.appendChild(typeSpan);
 
         
-const valuesStr = Array.isArray(values) 
-  ? values.map(v => v.replace(/ /g, '&nbsp;').replace(/-/g, '&#8209;')).join('<br>')
-  : values || '(no details)';
+const valuesStr = typeof values === 'string'
+  ? values
+      .split(/,\s*/)                          // split on comma + optional spaces
+      .map(item => item.trim())               // clean each item
+      .map(item => item.replace(/ /g, '&nbsp;').replace(/-/g, '&#8209;'))  // non-breaking space & hyphen
+      .join(',<br>')                          // comma + line break between items
+  : '(no details)';
+
+tag.setAttribute('data-values', valuesStr);
 
 tag.setAttribute('data-values', valuesStr);
         tag.setAttribute('data-type', type.toLowerCase());
