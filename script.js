@@ -243,8 +243,7 @@ function displayResult(index) {
 
         tag.appendChild(typeSpan);
 
-        // Add the values as data attribute (for hover display)
-        tag.setAttribute('data-values', values || '(no details)');
+       tag.setAttribute('data-values', values.map(v => v.replace(/ /g, '&nbsp;').replace(/-/g, '&#8209;')).join('\n'));
         tag.setAttribute('data-type', type.toLowerCase());
 
         // Optional: add title tooltip for accessibility
