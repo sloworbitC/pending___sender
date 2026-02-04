@@ -212,7 +212,7 @@ function displayResult(index) {
         Object.entries(result.sensitive_patterns).forEach(([key, arr]) => {
             if (Array.isArray(arr) && arr.length > 0) {
                 const cleanKey = key.toUpperCase().replace(/_/g, ' ').toLowerCase();
-                detections.set(cleanKey, arr.join(', '));
+                detections.set(cleanKey, arr);
             }
         });
     }
