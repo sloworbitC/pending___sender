@@ -166,7 +166,6 @@ function displayResult(index) {
 
     if (index < 0 || !previewBgLayer) {
         console.log('Early return - invalid index or no previewBgLayer');
-        if (previewBgLayer) previewBgLayer.textContent = '';
         currentPreviewIndex = -1;
         updateActiveRow();
         return;
