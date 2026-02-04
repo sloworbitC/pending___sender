@@ -166,6 +166,7 @@ function displayResult(index) {
 
     if (index < 0 || !previewBgLayer) {
         console.log('Early return - invalid index or no previewBgLayer');
+        if (previewBgLayer) previewBgLayer.textContent = '';
         currentPreviewIndex = -1;
         updateActiveRow();
         return;
@@ -205,14 +206,14 @@ function displayResult(index) {
     const detections = new Map();
 
     if (result.sensitive_terms?.length > 0) {
-        detections.set('keywords', result.sensitive_terms);
+        detections.set('keywords', result.sensitive_terms.join(', '));
     }
 
     if (result.sensitive_patterns) {
         Object.entries(result.sensitive_patterns).forEach(([key, arr]) => {
             if (Array.isArray(arr) && arr.length > 0) {
                 const cleanKey = key.toUpperCase().replace(/_/g, ' ').toLowerCase();
-                detections.set(cleanKey, arr);
+                detections.set(cleanKey, arr.join(', '));
             }
         });
     }
@@ -225,29 +226,33 @@ function displayResult(index) {
 
     if (detections.size === 0) return;
 
-    // ─── CREATE TAGS  ───
+    // ─── CREATE TAGS WITH PREDEFINED POSITIONS ───
     detections.forEach((values, type) => {
-    const tag = document.createElement('div');
-    tag.className = 'sensitive-type-tag';
+        const tag = document.createElement('div');
+        tag.className = 'sensitive-type-tag';
 
-    let displayText = type.toUpperCase();
-    if (type.toLowerCase() === 'keywords') {
-        displayText = 'CONTAINS';
-    }
+        let displayText = type.toUpperCase();
+        if (type.toLowerCase() === 'keywords') {
+            displayText = 'CONTAINS';
+        }
 
-    const typeSpan = document.createElement('span');
-    typeSpan.className = 'tag-type';
-    typeSpan.textContent = displayText;
+        // Create wrapper span for the type text
+        const typeSpan = document.createElement('span');
+        typeSpan.className = 'tag-type';
+        typeSpan.textContent = displayText;
 
-    tag.appendChild(typeSpan);
-        
-    console.log('Raw values array for', type, ':', values);
-console.log('Joined with \\n:', values.join('\n'));
-const valuesStr = Array.isArray(values) ? values.join('\n') : values || '(no details)';
-  tag.setAttribute('data-values', valuesStr);
+        tag.appendChild(typeSpan);
 
-    container.appendChild(tag);
-});
+        // Add the values as data attribute (for hover display)
+        tag.setAttribute('data-values', values || '(no details)');
+        tag.setAttribute('data-type', type.toLowerCase());
+
+        // Optional: add title tooltip for accessibility
+        tag.setAttribute('title', values || '(no details)');
+
+        container.appendChild(tag);
+
+    });
 
     console.log(JSON.stringify(result.content));
 
